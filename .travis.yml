@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t lcruz0709/react-test -f ./client/Dockerfile.dev
+
+script:
+  - docker run -e CI=true lcruz0709/react-test npm test -- --coverage
+
+after_success:
+  # Build the images
+  - docker build -t lcruz0709/multi-client ./client
+  - docker build -t lcruz0709/multi-nginx ./nginx
+  - docker build -t lcruz0709/multi-server ./server
+  - docker build -t lcruz0709/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take thise images and push them to docker hub
+  - docker push lcruz0709/multi-client
+  - docker push lcruz0709/multi-nginx
+  - docker push lcruz0709/multi-server
+  - docker push lcruz0709/multi-worker
